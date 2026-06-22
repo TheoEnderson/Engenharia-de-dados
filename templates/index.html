@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Acadêmico</title>
+    <style>
+        /* Estilos base (iguais aos anteriores) */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f0f2f5; color: #333; }
+        .sidebar { width: 250px; background-color: #1e293b; color: #fff; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; text-align: center; border-bottom: 1px solid #334155; }
+        .nav-links { list-style: none; padding: 20px 0; }
+        .nav-links li { padding: 15px 25px; transition: 0.3s; cursor: pointer; }
+        .nav-links li:hover, .nav-links li.active { background-color: #334155; border-left: 4px solid #3b82f6; font-weight: bold; }
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .card { background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 30px; }
+        .card-title { font-size: 18px; color: #3b82f6; margin-bottom: 20px; border-bottom: 2px solid #eff6ff; padding-bottom: 10px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .full-width { grid-column: span 2; }
+        label { font-size: 14px; font-weight: 600; color: #475569; }
+        input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+        .btn-submit { margin-top: 20px; background-color: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-submit:hover { background-color: #2563eb; }
+        
+        /* Estilos para a Tabela */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #cbd5e1; }
+        th { background-color: #f8fafc; color: #475569; }
+        
+        /* Classe para esconder as telas inativas */
+        .escondido { display: none; }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">Portal Acadêmico</div>
+        <ul class="nav-links">
+            <li class="active" onclick="mudarAba('aba-cadastros', this)">Cadastros (Novo)</li>
+            <li onclick="mudarAba('aba-alunos', this)">Consultar Alunos</li>
+            <li onclick="mudarAba('aba-cursos', this)">Consultar Cursos</li>
+            <li onclick="mudarAba('aba-status', this)">Mudar Status (Vínculo)</li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        
+        <div id="aba-cadastros" class="conteudo-aba">
+            <h1 style="margin-bottom: 20px;">Área de Cadastros</h1>
+            
+            <div class="card">
+                <h2 class="card-title">Cadastrar Novo Aluno</h2>
+                <form action="/cadastrar_aluno" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Nome Completo</label>
+                            <input type="text" name="nome" required>
+                        </div>
+                        <div class="form-group"><label>CPF</label><input type="number" name="cpf" required></div>
+                        <div class="form-group"><label>Matrícula (Ex: E150)</label><input type="text" name="matricula" required></div>
+                        <div class="form-group"><label>Ano de Ingresso</label><input type="number" name="ano_ingresso" required></div>
+                    </div>
+                    <button type="submit" class="btn-submit">Salvar Aluno</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Cadastrar Novo Curso</h2>
+                <form action="/cadastrar_curso" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Nome do Curso</label>
+                            <input type="text" name="nome_curso" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Campus</label>
+                            <input type="text" name="campus" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Turno</label>
+                            <select name="turno">
+                                <option value="Matutino">Matutino</option>
+                                <option value="Vespertino">Vespertino</option>
+                                <option value="Noturno">Noturno</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" style="background-color: #10b981;">Salvar Curso</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="aba-alunos" class="conteudo-aba escondido">
+            <h1 style="margin-bottom: 20px;">Lista de Alunos</h1>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Matrícula</th>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Ingresso</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for aluno in alunos %}
+                        <tr>
+                            <td>{{ aluno[0] }}</td>
+                            <td>{{ aluno[1] }}</td>
+                            <td>{{ aluno[2] }}</td>
+                            <td>{{ aluno[4] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="aba-cursos" class="conteudo-aba escondido">
+            <h1 style="margin-bottom: 20px;">Lista de Cursos</h1>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome do Curso</th>
+                            <th>Campus</th>
+                            <th>Turno</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for curso in cursos %}
+                        <tr>
+                            <td>{{ curso[0] }}</td>
+                            <td>{{ curso[1] }}</td>
+                            <td>{{ curso[4] }}</td>
+                            <td>{{ curso[3] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="aba-status" class="conteudo-aba escondido">
+            <h1 style="margin-bottom: 20px;">Atualizar Status de Matrícula</h1>
+            <div class="card">
+                <form action="/mudar_status" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Matrícula do Estudante (Ex: E101)</label>
+                            <input type="text" name="matricula_busca" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Novo Status</label>
+                            <select name="novo_status" required>
+                                <option value="Ativo">Ativo</option>
+                                <option value="Cancelada">Cancelada</option>
+                                <option value="Formando">Formando</option>
+                                <option value="Graduado">Graduado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" style="background-color: #f59e0b;">Atualizar Status</button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function mudarAba(idAba, elementoClicado) {
+            // 1. Esconde todas as abas
+            let abas = document.querySelectorAll('.conteudo-aba');
+            abas.forEach(aba => aba.classList.add('escondido'));
+
+            // 2. Tira a cor azul de todos os links do menu
+            let links = document.querySelectorAll('.nav-links li');
+            links.forEach(link => link.classList.remove('active'));
+
+            // 3. Mostra a aba certa e pinta o link clicado de azul
+            document.getElementById(idAba).classList.remove('escondido');
+            elementoClicado.classList.add('active');
+        }
+    </script>
+</body>
+</html>
