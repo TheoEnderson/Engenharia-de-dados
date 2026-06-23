@@ -73,7 +73,7 @@ def cadastrar_aluno():
     cursor.execute("INSERT INTO universidade.usuario (cpf, nome) VALUES (%s, %s)", (cpf, nome))
     cursor.execute("INSERT INTO universidade.estudante (mat_estudante, cpf, ano_ingresso) VALUES (%s, %s, %s)", (matricula, cpf, ano))
     
-    # CORREÇÃO 3: Alterado o nome da coluna de 'curso' para 'idCurso' para bater com o banco
+  
     cursor.execute("INSERT INTO universidade.vinculo (curso, mat_estudante, status) VALUES (%s, %s, %s)", (id_do_curso, matricula, status))
     
     conexao.commit() 
