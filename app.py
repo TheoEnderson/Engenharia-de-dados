@@ -53,13 +53,13 @@ def cadastrar_aluno():
     ano = request.form['ano_ingresso']
     status = request.form['novo_status']
     
-    # CORREÇÃO 1: Mudei o nome da variável para 'nome_curso' para bater com o SELECT abaixo
+    
     nome_curso = request.form['nome_curso'] 
 
     conexao = conectar_banco()
     cursor = conexao.cursor()
 
-    # CORREÇÃO 2: Adicionada a vírgula no final -> (nome_curso,) para virar uma tupla válida
+    
     cursor.execute("SELECT idCurso FROM universidade.curso WHERE nome = %s", (nome_curso,))
    
     resultado_busca = cursor.fetchone() 
