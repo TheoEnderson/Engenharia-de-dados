@@ -22,12 +22,13 @@ def index():
     conexao = conectar_banco()
     cursor = conexao.cursor()
     
-    # Busca os alunos (Fazendo a junção de Estudante e Usuário)
+    # CORREÇÃO NO ÚLTIMO JOIN: Alterado 'v.curso' para 'v.idCurso'
     cursor.execute("""
-        SELECT e.mat_estudante, u.nome, u.cpf, e.MC, e.ano_ingresso, v.status
+        SELECT e.mat_estudante, u.nome, u.cpf, e.MC, e.ano_ingresso, v.status, c.nome
         FROM universidade.estudante e 
         JOIN universidade.usuario u ON e.cpf = u.cpf
-            ;
+        JOIN universidade.vinculo v ON e.mat_estudante = v.mat_estudante
+        JOIN universidade.curso c ON c.idCurso = v.curso;
     """)
     todos_alunos = cursor.fetchall()
     
@@ -38,37 +39,50 @@ def index():
     cursor.close()
     conexao.close()
     
-    # Manda as variáveis para o HTML desenhar as tabelas
     return render_template('index.html', alunos=todos_alunos, cursos=todos_cursos)
+
 
 # ==========================================
 # ROTA PARA CADASTRAR ALUNO
 # ==========================================
 @app.route('/cadastrar_aluno', methods=['POST'])
 def cadastrar_aluno():
-    # Pega o que foi digitado no HTML
     nome = request.form['nome']
     cpf = request.form['cpf']
     matricula = request.form['matricula']
     ano = request.form['ano_ingresso']
     status = request.form['novo_status']
-    curso = request.form['nome_curso']
+    
+    # CORREÇÃO 1: Mudei o nome da variável para 'nome_curso' para bater com o SELECT abaixo
+    nome_curso = request.form['nome_curso'] 
 
     conexao = conectar_banco()
     cursor = conexao.cursor()
+
+    # CORREÇÃO 2: Adicionada a vírgula no final -> (nome_curso,) para virar uma tupla válida
+    cursor.execute("SELECT idCurso FROM universidade.curso WHERE nome = %s", (nome_curso,))
+   
+    resultado_busca = cursor.fetchone() 
+
+    if resultado_busca is None:
+        # Se não achou o curso, fecha a conexão e avisa o usuário
+        cursor.close()
+        conexao.close()
+        return f"<h1>Erro: O curso '{nome_curso}' não está cadastrado no sistema!</h1> <br> <a href='/'>Voltar</a>"
+    id_do_curso = resultado_busca[0]
     
-    # 1º Insere na tabela usuário (Pois estudante depende de usuário)
+    # Insere no Usuário e no Estudante
     cursor.execute("INSERT INTO universidade.usuario (cpf, nome) VALUES (%s, %s)", (cpf, nome))
-    
-    # 2º Insere na tabela estudante
     cursor.execute("INSERT INTO universidade.estudante (mat_estudante, cpf, ano_ingresso) VALUES (%s, %s, %s)", (matricula, cpf, ano))
-    cursor.execute("INSERT INTO universidade.vinculo (mat_estudante,status,curso) VALUES (%s, %s)", (matricula, status))
     
-    conexao.commit() # Salva na AWS
+    # CORREÇÃO 3: Alterado o nome da coluna de 'curso' para 'idCurso' para bater com o banco
+    cursor.execute("INSERT INTO universidade.vinculo (curso, mat_estudante, status) VALUES (%s, %s, %s)", (id_do_curso, matricula, status))
+    
+    conexao.commit() 
     cursor.close()
     conexao.close()
     
-    return redirect('/') # Recarrega a página
+    return redirect('/')
 
 # ============= =======================================================================
 # ROTA PARA CADASTRAR CURSO
@@ -100,8 +114,18 @@ def mudar_status():
     
     conexao = conectar_banco()
     cursor = conexao.cursor()
-    
-    cursor.execute("UPDATE universidade.vinculo SET status = %s WHERE mat_estudante = %s", (novo_status, matricula))
+    cursor.execute("SELECT cpf FROM universidade.estudante WHERE mat_estudante = %s", (matricula,))
+    resultado = cursor.fetchone()
+
+    if novo_status == "Cancelada" :
+        cpf_aluno = resultado[0]
+        cursor.execute("DELETE FROM universidade.vinculo WHERE mat_estudante = %s", (matricula,))              
+        cursor.execute("DELETE FROM universidade.estudante WHERE mat_estudante = %s", (matricula,))
+        cursor.execute("DELETE FROM universidade.usuario WHERE cpf = %s", (cpf_aluno,))
+        
+        print(f"Aluno {matricula} deletado do sistema por cancelamento.")
+    else :
+        cursor.execute("UPDATE universidade.vinculo SET status = %s WHERE mat_estudante = %s", (novo_status, matricula))
     
     conexao.commit()
     cursor.close()
