@@ -42,9 +42,7 @@ def index():
     return render_template('index.html', alunos=todos_alunos, cursos=todos_cursos)
 
 
-# ==========================================
-# ROTA PARA CADASTRAR ALUNO
-# ==========================================
+
 @app.route('/cadastrar_aluno', methods=['POST'])
 def cadastrar_aluno():
     nome = request.form['nome']
@@ -84,9 +82,6 @@ def cadastrar_aluno():
     
     return redirect('/')
 
-# ============= =======================================================================
-# ROTA PARA CADASTRAR CURSO
-# ==========================================
 @app.route('/cadastrar_curso', methods=['POST'])
 def cadastrar_curso():
     nome = request.form['nome_curso']
