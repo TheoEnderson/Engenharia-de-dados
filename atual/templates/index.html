@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Acadêmico SGA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">Portal Acadêmico</div>
+        <ul class="nav-links">
+            <li class="active" onclick="mudarAba('aba-cadastrar-aluno', this)">Cadastrar Aluno</li>
+            <li onclick="mudarAba('aba-cadastrar-curso', this)">Cadastrar Curso</li>
+            <li onclick="mudarAba('aba-consultar-alunos', this)">Consultar Alunos</li>
+            <li onclick="mudarAba('aba-consultar-cursos', this)">Consultar Cursos</li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        
+        <div id="aba-cadastrar-aluno" class="conteudo-aba">
+            <h1 class="aba-titulo">Gerenciamento de Admissões</h1>
+            <div class="card">
+                <h2 class="card-title">Matricular Novo Aluno (Dados de Usuário e Estudante)</h2>
+                <form action="/cadastrar_aluno" method="POST" class="form-grid">
+                    <div class="form-group span-2">
+                        <label>Nome Completo</label>
+                        <input type="text" name="nome" placeholder="Ex: Alan Turing" required>
+                    </div>
+                    <div class="form-group span-1">
+                        <label>CPF (Apenas números)</label>
+                        <input type="number" name="cpf" placeholder="Ex: 11122233344" required>
+                    </div>
+                    <div class="form-group span-1">
+                        <label>Data de Nascimento</label>
+                        <input type="date" name="data_nascimento" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>E-mail Institucional</label>
+                        <input type="email" name="email" placeholder="Ex: estudante@universidade.com" required>
+                    </div>
+                    <div class="form-group span-1">
+                        <label>Telefone de Contato</label>
+                        <input type="text" name="telefone" placeholder="Ex: 79999998888" required>
+                    </div>
+                    
+
+                    <div class="form-group span-1">
+                        <label>Código de Matrícula</label>
+                        <input type="text" name="matricula" placeholder="Ex: E101" required>
+                    </div>
+                    <div class="form-group span-1">
+                        <label>Média de Conclusão (MC)</label>
+                        <input type="number" name="mc" step="0.1" min="0" max="10" placeholder="Ex: 7.0">
+                    </div>
+                    <div class="form-group span-1">
+                        <label>Ano de Ingresso</label>
+                        <input type="number" name="ano_ingresso" placeholder="Ex: 2026" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Curso Vinculado (Nome exato do Curso)</label>
+                        <input type="text" name="nome_curso" placeholder="Ex: Ciência da Computação" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Status Inicial da Matrícula</label>
+                        <select name="status" required>
+                            <option value="Ativo" selected>Ativo</option>
+                            <option value="Formando">Formando</option>
+                            <option value="Graduado">Graduado</option>
+                        </select>
+                    </div>
+
+                    <div class="span-4" style="text-align: right;">
+                        <button type="submit" class="btn-submit btn-blue" style="width: 200px;">Salvar Registro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="aba-cadastrar-curso" class="conteudo-aba escondido">
+            <h1 class="aba-titulo">Estrutura Acadêmica</h1>
+            <div class="card">
+                <h2 class="card-title">Criar Nova Unidade de Curso</h2>
+                <form action="/cadastrar_curso" method="POST" class="form-grid">
+                    <div class="form-group span-2">
+                        <label>Nome da Graduação / Pós-Graduação</label>
+                        <input type="text" name="nome_curso" placeholder="Ex: Engenharia de Computação" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Campus de Lotação</label>
+                        <input type="text" name="campus" placeholder="Ex: São Cristóvão" required>
+                    </div>
+                    <div class="form-group span-1">
+                        <label>Grau Acadêmico</label>
+                        <select name="grau" required>
+                            <option value="Bacharelado" selected>Bacharelado</option>
+                            <option value="Licenciatura Plena">Licenciatura Plena</option>
+                        </select>
+                    </div>
+                    <div class="form-group span-1">
+                        <label>Nível Acadêmico</label>
+                        <select name="nivel" required>
+                            <option value="Graduação" selected>Graduação</option>
+                            <option value="Mestrado">Mestrado</option>
+                            <option value="Doutorado">Doutorado</option>
+                            <option value="Lato">Lato</option>
+                        </select>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Turno Ofertado</label>
+                        <select name="turno" required>
+                            <option value="Matutino">Matutino</option>
+                            <option value="Vespertino">Vespertino</option>
+                            <option value="Noturno">Noturno</option>
+                            <option value="Turno Indefinido">Turno Indefinido</option>
+                        </select>
+                    </div>
+
+                    <div class="span-4" style="text-align: right;">
+                        <button type="submit" class="btn-submit btn-green" style="width: 200px;">Cadastrar Curso</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="aba-consultar-alunos" class="conteudo-aba escondido">
+            <h1 class="aba-titulo">Registros de Discentes</h1>
+            <div class="card" style="padding: 10px;">
+                <table class="table-container">
+                    <thead>
+                        <tr>
+                            <th>Matrícula</th>
+                            <th>Nome do Aluno</th>
+                            <th>CPF</th>
+                            <th>Ingresso</th>
+                            <th style="text-align: right;">Operações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for aluno in alunos %}
+                        <tr>
+                            <td style="font-weight: 600;">{{ aluno[0] }}</td>
+                            <td>{{ aluno[1] }}</td>
+                            <td>{{ aluno[2] }}</td>
+                            <td>{{ aluno[3] }}</td>
+                            <td class="actions-cell">
+                                <a href="/usuario/{{ aluno[2] }}" class="btn-table btn-detail">Ver Detalhes ➔</a>
+                                
+                                <form action="/deletar_aluno/{{ aluno[2] }}" method="POST" style="margin:0;" onsubmit="return confirm('Tem certeza que deseja remover este aluno de forma permanente?');">
+                                    <button type="submit" class="btn-table btn-delete">Excluir ❌</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="aba-consultar-cursos" class="conteudo-aba escondido">
+            <h1 class="aba-titulo">Matriz de Cursos</h1>
+            <div class="card" style="padding: 10px;">
+                <table class="table-container">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome do Curso</th>
+                            <th>Nível</th>
+                            <th>Turno</th>
+                            <th>Campus</th>
+                            <th style="text-align: right;">Operações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for curso in cursos %}
+                        <tr>
+                            <td style="color: #64748b;">{{ curso[0] }}</td>
+                            <td style="font-weight: 600;">{{ curso[1] }}</td>
+                            <td>{{ curso[5] }}</td>
+                            <td>{{ curso[3] }}</td>
+                            <td>{{ curso[4] }}</td>
+                            <td class="actions-cell">
+                                <form action="/deletar_curso/{{ curso[0] }}" method="POST" style="margin:0;" onsubmit="return confirm('Remover este curso pode impactar os alunos vinculados. Confirmar exclusão?');">
+                                    <button type="submit" class="btn-table btn-delete">Excluir ❌</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function mudarAba(idAba, elementoClicado) {
+            let abas = document.querySelectorAll('.conteudo-aba');
+            abas.forEach(aba => aba.classList.add('escondido'));
+
+            let links = document.querySelectorAll('.nav-links li');
+            links.forEach(link => link.classList.remove('active'));
+
+            document.getElementById(idAba).classList.remove('escondido');
+            elementoClicado.classList.add('active');
+        }
+    </script>
+</body>
+</html>
