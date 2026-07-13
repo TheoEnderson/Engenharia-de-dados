@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Acadêmica Individual</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">Portal Acadêmico</div>
+        <ul class="nav-links">
+            <li class="active"><a href="/" style="color: inherit; text-decoration: none;">⬅ Voltar ao Painel</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        {% with mensagens = get_flashed_messages(with_categories=True) %}
+            {% if mensagens %}
+            <div class="alert-container" aria-live="polite">
+                {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }}" role="alert">
+                    <span>{{ mensagem }}</span>
+                    <button type="button" class="alert-close" aria-label="Fechar mensagem" onclick="fecharMensagem(this)">×</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        <h1 class="aba-titulo">Prontuário de Informações</h1>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            
+            <div class="card">
+                <h2 class="card-title" style="color: #3b82f6;">Perfil Geral (Tabela Usuário)</h2>
+                <form action="/editar_usuario/{{ usuario[0] }}" method="POST" class="form-grid">
+                    <div class="form-group span-4">
+                        <label>Nome Completo</label>
+                        <input type="text" name="nome" value="{{ usuario[1] }}" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Login de Sistema</label>
+                        <input type="text" name="login" value="{{ usuario[5] }}" maxlength="45" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>CPF (Bloqueado)</label>
+                        <input type="text" value="{{ usuario[0] }}" disabled style="background-color: #f1f5f9;">
+                    </div>
+                    <div class="span-4" style="text-align: right; margin-top: 10px;">
+                        <button type="submit" class="btn-submit btn-blue" style="width: 100%;">Atualizar Perfil</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title" style="color: #f59e0b;">Situação e Vínculo Estudantil</h2>
+                {% if estudante %}
+                <form action="/editar_estudante_vinculo" method="POST" class="form-grid">
+                    <input type="hidden" name="cpf" value="{{ usuario[0] }}">
+                    <input type="hidden" name="matricula" value="{{ estudante[0] }}">
+                    <input type="hidden" name="id_vinculo" value="{{ estudante[8] }}">
+                    <div class="form-group span-2">
+                        <label>Código de Matrícula</label>
+                        <input type="text" value="{{ estudante[0] }}" disabled style="background-color: #f1f5f9;">
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Média de Conclusão (MC)</label>
+                        <input type="number" name="mc" value="{{ estudante[2] if estudante[2] is not none else '' }}" step="0.1" min="0" max="10" placeholder="Opcional">
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Ano de Ingresso</label>
+                        <input type="number" name="ano_ingresso" value="{{ estudante[5] }}" min="1900" max="2100" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Status do Vínculo</label>
+                        <select name="status_vinculo" required>
+                            {% for status in ['Ativo', 'Formando', 'Graduado', 'Cancelada'] %}
+                            <option value="{{ status }}" {% if estudante[3] == status %}selected{% endif %}>{{ status }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group span-4">
+                        <label>Curso Atual</label>
+                        <select name="curso_id" required>
+                            {% for curso in cursos %}
+                            <option value="{{ curso[0] }}" {% if estudante[7] == curso[0] %}selected{% endif %}>
+                                {{ curso[1] }} — {{ curso[4] or 'Campus não informado' }} / {{ curso[3] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="span-4" style="text-align: right; margin-top: 10px;">
+                        <button type="submit" class="btn-submit btn-blue" style="background-color: #f59e0b; width: 100%;">Atualizar Estudante e Vínculo</button>
+                    </div>
+                </form>
+                {% else %}
+                <p>Não há dados de estudante ou vínculo associados a este usuário.</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function fecharMensagem(botao) {
+            const alerta = botao.closest('.alert');
+            if (!alerta) return;
+            alerta.classList.add('alert-saindo');
+            window.setTimeout(() => alerta.remove(), 250);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.alert').forEach((alerta, indice) => {
+                window.setTimeout(() => {
+                    const botao = alerta.querySelector('.alert-close');
+                    if (botao && document.body.contains(alerta)) fecharMensagem(botao);
+                }, 5000 + (indice * 150));
+            });
+        });
+    </script>
+</body>
+</html>
