@@ -39,7 +39,7 @@
                 <form action="/cadastrar_aluno" method="POST" class="form-grid">
                     <div class="form-group span-2">
                         <label>Nome Completo</label>
-                        <input type="text" name="nome" placeholder="Ex: Alan Turing" required>
+                        <input type="text" name="nome" maxlength="100" placeholder="Ex: Alan Turing" required>
                     </div>
                     <div class="form-group span-1">
                         <label>CPF (Apenas números)</label>
@@ -51,7 +51,7 @@
                     </div>
                     <div class="form-group span-2">
                         <label>E-mail Institucional</label>
-                        <input type="email" name="email" placeholder="Ex: estudante@universidade.com" required>
+                        <input type="email" name="email" multiple placeholder="Ex: estudante@universidade.com" required>
                     </div>
                     <div class="form-group span-1">
                         <label>Telefone de Contato</label>
@@ -61,10 +61,18 @@
                         <label>Login de Sistema</label>
                         <input type="text" name="login" maxlength="45" placeholder="Ex: alan.turing" required>
                     </div>
+                    <div class="form-group span-2">
+                        <label>Senha</label>
+                        <input type="password" name="senha" maxlength="32" autocomplete="new-password" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Confirmar senha</label>
+                        <input type="password" name="confirmar_senha" maxlength="32" autocomplete="new-password" required>
+                    </div>
 
                     <div class="form-group span-1">
                         <label>Matrícula do Estudante</label>
-                        <input type="text" name="matricula" placeholder="Ex: E101" required>
+                        <input type="text" name="matricula" maxlength="7" placeholder="Ex: E101" required>
                     </div>
                     <div class="form-group span-1">
                         <label>Média de Conclusão (MC)</label>

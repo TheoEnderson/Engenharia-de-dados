@@ -10,6 +10,7 @@ app.secret_key = os.environ.get(
     "FLASK_SECRET_KEY",
     "chave-local-de-desenvolvimento-altere-em-producao",
 )
+TAMANHO_MAXIMO_SENHA = 32
 
 
 def conectar_banco():
@@ -27,11 +28,23 @@ def pagina_erro(mensagem, destino="/", categoria="error"):
     return redirect(destino)
 
 
+def converter_lista_texto(valor):
+    """Converte valores separados por vírgula para os arrays VARCHAR[] do dump."""
+    itens = [item.strip() for item in valor.split(',') if item.strip()]
+    return itens or None
+
+
 def mensagem_erro_banco(erro, operacao):
     if isinstance(erro, psycopg2.errors.UniqueViolation):
         restricao = (getattr(erro.diag, "constraint_name", "") or "").lower()
         if "login" in restricao:
             return "Este login já está em uso. Escolha outro login."
+        if restricao in {"pk_usuario", "uq_cpf"}:
+            return "Já existe um usuário ou estudante cadastrado com este CPF."
+        if restricao == "pk_estudante":
+            return "Já existe um estudante cadastrado com esta matrícula."
+        if restricao == "uq_curso":
+            return "Já existe um curso com o mesmo nome, turno, campus e nível."
         return "Já existe um registro com um dos identificadores informados."
     if isinstance(erro, psycopg2.errors.ForeignKeyViolation):
         return "A operação não pode ser concluída porque o registro ainda possui dados relacionados."
@@ -42,6 +55,8 @@ def mensagem_erro_banco(erro, operacao):
 def index():
     conexao = None
     cursor = None
+    todos_alunos = []
+    todos_cursos = []
     try:
         conexao = conectar_banco()
         cursor = conexao.cursor()
@@ -60,6 +75,8 @@ def index():
             ORDER BY nome, campus, turno;
         """)
         todos_cursos = cursor.fetchall()
+    except Exception:
+        flash("Não foi possível carregar os dados do Portal Acadêmico.", "error")
     finally:
         if cursor is not None:
             cursor.close()
@@ -72,17 +89,25 @@ def index():
 @app.route('/cadastrar_aluno', methods=['POST'])
 def cadastrar_aluno():
     login = request.form.get('login', '').strip()
+    senha = request.form.get('senha', '')
+    confirmar_senha = request.form.get('confirmar_senha', '')
     if not login:
         return pagina_erro("O login é obrigatório.")
     if len(login) > 45:
         return pagina_erro("O login deve ter no máximo 45 caracteres.")
+    if not senha or not senha.strip():
+        return pagina_erro("A senha é obrigatória.")
+    if len(senha) > TAMANHO_MAXIMO_SENHA:
+        return pagina_erro("A senha deve ter no máximo 32 caracteres.")
+    if senha != confirmar_senha:
+        return pagina_erro("A senha e a confirmação de senha não coincidem.")
 
     try:
         nome = request.form['nome'].strip()
         cpf = int(request.form['cpf'])
         data_nascimento = request.form['data_nascimento']
-        email = request.form['email'].strip()
-        telefone = request.form['telefone'].strip()
+        email_texto = request.form['email'].strip()
+        telefone_texto = request.form['telefone'].strip()
         matricula = request.form['matricula'].strip()
         mc_raw = request.form.get('mc', '').strip()
         mc = float(mc_raw) if mc_raw else None
@@ -92,15 +117,20 @@ def cadastrar_aluno():
     except (KeyError, TypeError, ValueError):
         return pagina_erro("Há campos obrigatórios ausentes ou inválidos.")
 
-    if not all((nome, data_nascimento, email, telefone, matricula, status)):
+    if not all((nome, data_nascimento, email_texto, telefone_texto, matricula, status)):
         return pagina_erro("Preencha todos os campos obrigatórios.")
+    if len(nome) > 100:
+        return pagina_erro("O nome deve ter no máximo 100 caracteres.")
+    if len(matricula) > 7:
+        return pagina_erro("A matrícula deve ter no máximo 7 caracteres.")
     if not 1900 <= ano_ingresso <= 2100:
         return pagina_erro("O ano de ingresso deve estar entre 1900 e 2100.")
 
+    emails = converter_lista_texto(email_texto)
+    telefones = converter_lista_texto(telefone_texto)
     # O dump define vinculo.data_entrada como DATE. Como a interface recebe
     # somente o ano, o primeiro dia desse ano representa a data de ingresso.
     data_entrada = date(ano_ingresso, 1, 1)
-    senha = str(cpf)[:6]
 
     conexao = None
     cursor = None
@@ -128,7 +158,7 @@ def cadastrar_aluno():
             INSERT INTO universidade.usuario
                 (cpf, nome, data_nascimento, email, telefone, login, senha)
             VALUES (%s, %s, %s, %s, %s, %s, %s);
-        """, (cpf, nome, data_nascimento, [email], [telefone], login, senha))
+        """, (cpf, nome, data_nascimento, emails, telefones, login, senha))
 
         cursor.execute("""
             INSERT INTO universidade.estudante
@@ -147,7 +177,8 @@ def cadastrar_aluno():
             );
         """, (matricula, id_curso, data_entrada, status, matricula, id_curso))
         if cursor.rowcount != 1:
-            raise psycopg2.IntegrityError("O vínculo entre estudante e curso já existe.")
+            conexao.rollback()
+            return pagina_erro("Este vínculo entre estudante e curso já existe.")
 
         # As três inserções pertencem à mesma transação.
         conexao.commit()
@@ -329,6 +360,9 @@ def deletar_curso(id_curso):
 def detalhes_usuario(cpf):
     conexao = None
     cursor = None
+    usuario = None
+    estudante = None
+    cursos = []
     try:
         cpf_numero = int(cpf)
         conexao = conectar_banco()
@@ -357,6 +391,10 @@ def detalhes_usuario(cpf):
             ORDER BY nome, campus, turno;
         """)
         cursos = cursor.fetchall()
+    except (TypeError, ValueError):
+        return pagina_erro("CPF inválido.")
+    except Exception:
+        return pagina_erro("Não foi possível carregar a ficha acadêmica.")
     finally:
         if cursor is not None:
             cursor.close()
@@ -374,32 +412,66 @@ def detalhes_usuario(cpf):
 @app.route('/editar_usuario/<cpf>', methods=['POST'])
 def editar_usuario(cpf):
     nome = request.form.get('nome', '').strip()
+    data_nascimento = request.form.get('data_nascimento', '').strip()
+    email_texto = request.form.get('email', '').strip()
+    telefone_texto = request.form.get('telefone', '').strip()
     login = request.form.get('login', '').strip()
+    nova_senha = request.form.get('senha', '')
+    confirmar_senha = request.form.get('confirmar_senha', '')
+    destino = f"/usuario/{cpf}"
     if not nome:
-        return pagina_erro("O nome é obrigatório.", f"/usuario/{cpf}")
+        return pagina_erro("O nome é obrigatório.", destino)
+    if len(nome) > 100:
+        return pagina_erro("O nome deve ter no máximo 100 caracteres.", destino)
+    if not data_nascimento:
+        return pagina_erro("A data de nascimento é obrigatória.", destino)
     if not login:
-        return pagina_erro("O login é obrigatório.", f"/usuario/{cpf}")
+        return pagina_erro("O login é obrigatório.", destino)
     if len(login) > 45:
-        return pagina_erro(
-            "O login deve ter no máximo 45 caracteres.", f"/usuario/{cpf}"
-        )
+        return pagina_erro("O login deve ter no máximo 45 caracteres.", destino)
+    if nova_senha or confirmar_senha:
+        if not nova_senha or not nova_senha.strip():
+            return pagina_erro("Informe a nova senha.", destino)
+        if len(nova_senha) > TAMANHO_MAXIMO_SENHA:
+            return pagina_erro("A senha deve ter no máximo 32 caracteres.", destino)
+        if nova_senha != confirmar_senha:
+            return pagina_erro(
+                "A nova senha e a confirmação não coincidem.", destino
+            )
+
+    emails = converter_lista_texto(email_texto)
+    telefones = converter_lista_texto(telefone_texto)
 
     conexao = None
     cursor = None
     try:
         conexao = conectar_banco()
         cursor = conexao.cursor()
-        cursor.execute("""
-            UPDATE universidade.usuario
-            SET nome = %s, login = %s
-            WHERE cpf = %s;
-        """, (nome, login, int(cpf)))
+        if nova_senha:
+            cursor.execute("""
+                UPDATE universidade.usuario
+                SET nome = %s, data_nascimento = %s, email = %s,
+                    telefone = %s, login = %s, senha = %s
+                WHERE cpf = %s;
+            """, (
+                nome, data_nascimento, emails, telefones, login,
+                nova_senha, int(cpf)
+            ))
+        else:
+            cursor.execute("""
+                UPDATE universidade.usuario
+                SET nome = %s, data_nascimento = %s, email = %s,
+                    telefone = %s, login = %s
+                WHERE cpf = %s;
+            """, (
+                nome, data_nascimento, emails, telefones, login, int(cpf)
+            ))
         conexao.commit()
     except Exception as erro:
         if conexao is not None:
             conexao.rollback()
         return pagina_erro(
-            mensagem_erro_banco(erro, "atualizar o perfil"), f"/usuario/{cpf}"
+            mensagem_erro_banco(erro, "atualizar o perfil"), destino
         )
     finally:
         if cursor is not None:
@@ -495,8 +567,10 @@ def editar_estudante_vinculo():
 @app.route('/atualizar_status_vinculo', methods=['POST'])
 def atualizar_status_vinculo():
     """Mantida por compatibilidade com formulários antigos."""
-    matricula = request.form['matricula']
-    status_vinculo = request.form['status_vinculo']
+    matricula = request.form.get('matricula', '').strip()
+    status_vinculo = request.form.get('status_vinculo', '').strip()
+    if not matricula or not status_vinculo:
+        return pagina_erro("Há campos do vínculo ausentes ou inválidos.")
     conexao = None
     cursor = None
     cpf_aluno = None
