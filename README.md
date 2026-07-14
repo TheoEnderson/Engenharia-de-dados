@@ -7,6 +7,6 @@ Uma breve descrição do teu projeto aqui. Exemplo: *Aplicação académica dese
 | Parte | Tema | Entrega Principal | Acessos Rápidos | 
 | :---: | :--- | :--- | :--- | 
 | **1** | **PostgreSQL** | Modelação SQL, tabelas relacionais e CRUD inicial. | [🔗 Código](https://github.com/pedroguiao/Engenharia-de-dados) | 
-| **2** | **MongoDB** | Migração NoSQL, integridade referencial e CRUD com Flask. | [🔗 Código](https://github.com/pedroguiao/Engenharia-de-dados/tree/main/Parte2) · [📄 Relatório](./Relatorio/RELATORIO_PARTE2.md) | 
+| **2** | **MongoDB** | Migração NoSQL, integridade referencial e CRUD com Flask. | [🔗 Código](https://github.com/pedroguiao/Engenharia-de-dados/tree/main/Parte2) · [📄 Relatório](./Parte2/Relatorio/RELATORIO_PARTE2.md) | 
 | **3** | **Data Warehouse** | Integração analítica, processos ETL e consultas OLAP. | [🔗 Pipelines](https://github.com/pedroguiao/Engenharia-de-dados) | 
 
