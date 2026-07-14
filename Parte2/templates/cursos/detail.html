@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}{{ curso.nome }} — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Ficha de curso</p><h1>{{ curso.nome }}</h1></div><div class="header-actions"><a class="button secondary" href="{{ url_for('courses_list') }}">Voltar</a><a class="button primary" href="{{ url_for('courses_edit', course_id=curso.idCurso) }}">Editar</a></div></header>
+<section class="card"><dl class="details-wide"><dt>Grau</dt><dd>{{ curso.grau or '—' }}</dd><dt>Turno</dt><dd>{{ curso.turno }}</dd><dt>Campus</dt><dd>{{ curso.campus or '—' }}</dd><dt>Nível</dt><dd>{{ curso.nivel or '—' }}</dd><dt>Vínculos ativos no cadastro</dt><dd>{{ curso.total_vinculos }}</dd></dl></section>
+{% endblock %}

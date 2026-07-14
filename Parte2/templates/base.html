@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Portal Acadêmico NoSQL{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <aside class="sidebar">
+        <a class="brand" href="{{ url_for('index') }}">Portal NoSQL</a>
+        <span class="mode-badge">MongoDB {{ mongodb_mode|upper }}</span>
+        <nav aria-label="Navegação principal">
+            <a href="{{ url_for('index') }}">Visão geral</a>
+            <a href="{{ url_for('users_list') }}">Usuários</a>
+            <a href="{{ url_for('students_list') }}">Estudantes</a>
+            <a href="{{ url_for('links_list') }}">Vínculos</a>
+            <a href="{{ url_for('courses_list') }}">Cursos</a>
+            <a class="nav-accent" href="{{ url_for('admission_create') }}">Nova admissão</a>
+        </nav>
+        <p class="sidebar-note">Dados temporários em memória. Reiniciar a aplicação apaga o conteúdo.</p>
+    </aside>
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <section class="alerts" aria-live="polite">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button type="button" aria-label="Fechar" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            </section>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

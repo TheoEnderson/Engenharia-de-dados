@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Visão geral — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div><p class="eyebrow">Parte 2 · ambiente local</p><h1>Gestão acadêmica MongoDB</h1></div>
+    <a class="button primary" href="{{ url_for('admission_create') }}">Iniciar admissão</a>
+</header>
+<section class="notice"><strong>Modo seguro:</strong> esta execução usa somente MongoDB simulado em memória e não acessa o Atlas.</section>
+<section class="stats-grid">
+    <a class="stat-card" href="{{ url_for('users_list') }}"><span>Usuários</span><strong>{{ counts.usuario }}</strong></a>
+    <a class="stat-card" href="{{ url_for('students_list') }}"><span>Estudantes</span><strong>{{ counts.estudante }}</strong></a>
+    <a class="stat-card" href="{{ url_for('links_list') }}"><span>Vínculos</span><strong>{{ counts.vinculo }}</strong></a>
+    <a class="stat-card" href="{{ url_for('courses_list') }}"><span>Cursos</span><strong>{{ counts.curso }}</strong></a>
+</section>
+<section class="card">
+    <h2>Fluxos disponíveis</h2>
+    <div class="quick-grid">
+        <a href="{{ url_for('users_create') }}">Cadastrar usuário <span>→</span></a>
+        <a href="{{ url_for('students_create') }}">Cadastrar estudante <span>→</span></a>
+        <a href="{{ url_for('links_create') }}">Criar vínculo <span>→</span></a>
+        <a href="{{ url_for('courses_create') }}">Cadastrar curso <span>→</span></a>
+    </div>
+</section>
+{% endblock %}

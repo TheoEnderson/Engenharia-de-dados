@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Estudantes — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Coleção canônica</p><h1>Estudantes</h1></div><a class="button primary" href="{{ url_for('students_create') }}">Novo estudante</a></header>
+<section class="card table-wrap">{% if estudantes %}<table><thead><tr><th>Matrícula</th><th>Usuário</th><th>CPF</th><th>Ano</th><th class="actions">Ações</th></tr></thead><tbody>{% for estudante in estudantes %}<tr><td>{{ estudante.mat_estudante }}</td><td>{{ estudante.usuario_nome }}</td><td>{{ estudante.cpf }}</td><td>{{ estudante.ano_ingresso or '—' }}</td><td class="actions"><a class="button small" href="{{ url_for('students_detail', matricula=estudante.mat_estudante) }}">Ficha</a><a class="button small secondary" href="{{ url_for('students_edit', matricula=estudante.mat_estudante) }}">Editar</a><form method="post" action="{{ url_for('students_delete', matricula=estudante.mat_estudante) }}" onsubmit="return confirm('Excluir este estudante? Vínculos precisam ser removidos antes.')"><button class="button small danger">Excluir</button></form></td></tr>{% endfor %}</tbody></table>{% else %}<p class="empty">Nenhum estudante cadastrado.</p>{% endif %}</section>
+{% endblock %}

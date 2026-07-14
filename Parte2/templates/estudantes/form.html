@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if editing else 'Novo' }} estudante — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Estudante</p><h1>{{ 'Editar estudante' if editing else 'Cadastrar estudante' }}</h1></div><a class="button secondary" href="{{ url_for('students_list') }}">Voltar</a></header>
+{% if not usuarios %}<section class="notice warning">Cadastre um usuário antes de criar um estudante.</section>{% endif %}
+<form method="post" class="card form-grid">
+    <div class="field"><label for="mat_estudante">Matrícula</label><input id="mat_estudante" name="mat_estudante" maxlength="7" value="{{ estudante.mat_estudante if estudante else '' }}" {% if editing %}readonly{% else %}required{% endif %}></div>
+    <div class="field"><label for="cpf">Usuário</label><select id="cpf" name="cpf" required><option value="">Selecione</option>{% for usuario in usuarios %}<option value="{{ usuario.cpf }}" {% if estudante and estudante.cpf == usuario.cpf %}selected{% endif %}>{{ usuario.nome }} — {{ usuario.cpf }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="MC">MC</label><input type="number" step="0.1" min="0" max="10" id="MC" name="MC" value="{{ estudante.MC|decimal_value if estudante else '' }}"></div>
+    <div class="field"><label for="ano_ingresso">Ano de ingresso</label><input type="number" min="1900" max="2100" id="ano_ingresso" name="ano_ingresso" value="{{ estudante.ano_ingresso or '' if estudante else '' }}"></div>
+    <div class="form-actions span-2"><button class="button primary" {% if not usuarios %}disabled{% endif %}>Salvar estudante</button></div>
+</form>
+{% endblock %}

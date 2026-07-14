@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if editing else 'Novo' }} curso — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Curso</p><h1>{{ 'Editar curso' if editing else 'Cadastrar curso' }}</h1></div><a class="button secondary" href="{{ url_for('courses_list') }}">Voltar</a></header>
+<form method="post" class="card form-grid">
+    <div class="field span-2"><label for="nome">Nome</label><input id="nome" name="nome" maxlength="100" value="{{ curso.nome if curso else '' }}" required></div>
+    <div class="field"><label for="grau">Grau</label><select id="grau" name="grau"><option value="">Não informado</option>{% for item in graus %}<option value="{{ item }}" {% if curso and curso.grau == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="turno">Turno</label><select id="turno" name="turno" required><option value="">Selecione</option>{% for item in turnos %}<option value="{{ item }}" {% if curso and curso.turno == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="campus">Campus</label><input id="campus" name="campus" maxlength="100" value="{{ curso.campus or '' if curso else '' }}"></div>
+    <div class="field"><label for="nivel">Nível</label><select id="nivel" name="nivel"><option value="">Não informado</option>{% for item in niveis %}<option value="{{ item }}" {% if curso and curso.nivel == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+    <div class="form-actions span-2"><button class="button primary">Salvar curso</button></div>
+</form>
+{% endblock %}

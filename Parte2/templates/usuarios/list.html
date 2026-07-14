@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Usuários — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Coleção canônica</p><h1>Usuários</h1></div><a class="button primary" href="{{ url_for('users_create') }}">Novo usuário</a></header>
+<section class="card table-wrap">
+{% if usuarios %}
+<table><thead><tr><th>Nome</th><th>CPF</th><th>Login</th><th class="actions">Ações</th></tr></thead><tbody>
+{% for usuario in usuarios %}<tr><td>{{ usuario.nome }}</td><td>{{ usuario.cpf }}</td><td>{{ usuario.login or '—' }}</td><td class="actions"><a class="button small" href="{{ url_for('users_detail', cpf=usuario.cpf) }}">Ficha</a><a class="button small secondary" href="{{ url_for('users_edit', cpf=usuario.cpf) }}">Editar</a><form method="post" action="{{ url_for('users_delete', cpf=usuario.cpf) }}" onsubmit="return confirm('Excluir este usuário?')"><button class="button small danger">Excluir</button></form></td></tr>{% endfor %}
+</tbody></table>
+{% else %}<p class="empty">Nenhum usuário cadastrado.</p>{% endif %}
+</section>
+{% endblock %}

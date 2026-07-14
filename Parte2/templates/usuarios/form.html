@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if editing else 'Novo' }} usuário — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Usuário</p><h1>{{ 'Editar perfil' if editing else 'Cadastrar usuário' }}</h1></div><a class="button secondary" href="{{ url_for('users_list') }}">Voltar</a></header>
+<form method="post" class="card form-grid" autocomplete="off">
+    <div class="field span-2"><label for="cpf">CPF</label><input id="cpf" name="cpf" inputmode="numeric" maxlength="13" value="{{ usuario.cpf if usuario else '' }}" {% if editing %}readonly{% else %}required{% endif %}></div>
+    <div class="field span-2"><label for="nome">Nome completo</label><input id="nome" name="nome" maxlength="100" value="{{ usuario.nome if usuario else '' }}" required></div>
+    <div class="field"><label for="data_nascimento">Data de nascimento</label><input type="date" id="data_nascimento" name="data_nascimento" value="{{ usuario.data_nascimento|date_input if usuario else '' }}"></div>
+    <div class="field"><label for="login">Login</label><input id="login" name="login" maxlength="45" value="{{ usuario.login or '' if usuario else '' }}"></div>
+    <div class="field span-2"><label for="email">E-mails separados por vírgula</label><input id="email" name="email" value="{{ usuario.email|join(', ') if usuario and usuario.email else '' }}"></div>
+    <div class="field span-2"><label for="telefone">Telefones separados por vírgula</label><input id="telefone" name="telefone" value="{{ usuario.telefone|join(', ') if usuario and usuario.telefone else '' }}"></div>
+    <div class="field"><label for="senha">{{ 'Nova senha' if editing else 'Senha' }}</label><input type="password" id="senha" name="senha" maxlength="32" autocomplete="new-password" placeholder="{{ 'Vazio mantém a atual' if editing else 'Opcional conforme schema' }}"></div>
+    <div class="field"><label for="confirmar_senha">Confirmar senha</label><input type="password" id="confirmar_senha" name="confirmar_senha" maxlength="32" autocomplete="new-password"></div>
+    <div class="form-actions span-2"><button class="button primary">Salvar usuário</button></div>
+</form>
+{% endblock %}

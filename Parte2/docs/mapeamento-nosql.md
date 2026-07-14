@@ -76,7 +76,9 @@ PK: `mat_estudante`. Única: `cpf` quando não nulo. `cpf` referencia
 {"idVinculo":1,"mat_estudante":"E101","idCurso":3,"data_entrada":null,"status":"Ativo","data_saida":null}
 ```
 
-PK: `idVinculo`. Referências: `mat_estudante` → `estudante.mat_estudante` e
+PK: `idVinculo`. A aplicação acrescenta unicidade composta de
+`(mat_estudante, idCurso)` para impedir dois vínculos do mesmo estudante com o
+mesmo curso. Referências: `mat_estudante` → `estudante.mat_estudante` e
 `idCurso` → `curso.idCurso`. Status usa o enum SQL.
 
 ### `projeto`
@@ -208,5 +210,25 @@ impedem alterações futuras diretamente no banco. A aplicação CRUD deverá:
 4. usar transações quando uma operação modificar mais de uma coleção;
 5. tratar erros de índice único e validator.
 
-`usuario`, `estudante`, `vinculo` e `curso` terão CRUD completo na próxima
-etapa. A interface e as rotas ainda não fazem parte desta fundação.
+## CRUD local e integridade da aplicação
+
+A aplicação Flask mantém `usuario`, `estudante`, `vinculo` e `curso` separados e
+oferece cadastro, listagem, ficha, edição e exclusão individual. A camada de
+serviço valida CPF, matrícula, IDs, datas, números, limites, enums, unicidades e
+referências antes de acessar os repositórios. Exclusões de usuário, estudante e
+curso são bloqueadas quando deixariam referências órfãs.
+
+O fluxo de admissão valida usuário, estudante e vínculo antes da primeira
+escrita. Em `mongomock`, um snapshot das quatro coleções permite rollback. O
+repositório também aceita uma fábrica de transações para uma futura sessão real
+do PyMongo, que ainda precisará ser implementada e homologada no Atlas.
+
+O campo `senha` continua com o tipo e limite definidos no dump. Ele não é
+incluído em respostas públicas, páginas, logs ou mensagens; senha vazia em uma
+edição mantém o valor anterior. O sistema ainda não implementa autenticação.
+Adotar hash de senha exigirá ampliar ou substituir o limite de 32 caracteres e
+migrar os documentos, portanto essa mudança não foi feita implicitamente.
+
+O modo web atual aceita apenas `MONGODB_MODE=mock`. A interface e os testes não
+abrem conexão de rede. Integração Atlas, transações reais e validação dos dados
+remotos permanecem etapas futuras sujeitas a autorização.

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Vínculo acadêmico — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Ficha de vínculo</p><h1>{{ vinculo.estudante.mat_estudante if vinculo.estudante else 'Referência ausente' }} · {{ vinculo.curso.nome if vinculo.curso else 'Curso ausente' }}</h1></div><div class="header-actions"><a class="button secondary" href="{{ url_for('links_list') }}">Voltar</a><a class="button primary" href="{{ url_for('links_edit', link_id=vinculo.idVinculo) }}">Editar</a></div></header>
+<section class="card"><dl class="details-wide"><dt>Estudante</dt><dd>{% if vinculo.estudante %}<a href="{{ url_for('students_detail', matricula=vinculo.estudante.mat_estudante) }}">{{ vinculo.estudante.mat_estudante }}</a>{% else %}—{% endif %}</dd><dt>Curso</dt><dd>{% if vinculo.curso %}<a href="{{ url_for('courses_detail', course_id=vinculo.curso.idCurso) }}">{{ vinculo.curso.nome }}</a>{% else %}—{% endif %}</dd><dt>Status</dt><dd>{{ vinculo.status }}</dd><dt>Entrada</dt><dd>{{ vinculo.data_entrada|date_br }}</dd><dt>Saída</dt><dd>{{ vinculo.data_saida|date_br }}</dd></dl></section>
+{% endblock %}

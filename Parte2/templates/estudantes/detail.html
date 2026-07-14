@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}{{ estudante.mat_estudante }} — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Ficha de estudante</p><h1>{{ estudante.mat_estudante }}</h1></div><div class="header-actions"><a class="button secondary" href="{{ url_for('students_list') }}">Voltar</a><a class="button primary" href="{{ url_for('students_edit', matricula=estudante.mat_estudante) }}">Editar</a></div></header>
+<section class="detail-grid"><article class="card"><h2>Dados acadêmicos</h2><dl><dt>Usuário</dt><dd>{% if estudante.usuario %}<a href="{{ url_for('users_detail', cpf=estudante.usuario.cpf) }}">{{ estudante.usuario.nome }}</a>{% else %}Referência ausente{% endif %}</dd><dt>CPF</dt><dd>{{ estudante.cpf }}</dd><dt>MC</dt><dd>{{ estudante.MC|decimal_value or '—' }}</dd><dt>Ano de ingresso</dt><dd>{{ estudante.ano_ingresso or '—' }}</dd></dl></article><article class="card"><h2>Vínculos</h2>{% if estudante.vinculos %}<ul class="link-list">{% for vinculo in estudante.vinculos %}<li><a href="{{ url_for('links_detail', link_id=vinculo.idVinculo) }}">Curso {{ vinculo.idCurso }} · {{ vinculo.status }}</a></li>{% endfor %}</ul>{% else %}<p class="empty">Sem vínculos.</p>{% endif %}</article></section>
+{% endblock %}

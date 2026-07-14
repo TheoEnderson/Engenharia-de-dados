@@ -196,7 +196,7 @@ COLLECTION_SPECS: dict[str, dict[str, Any]] = {
     },
     "vinculo": {
         "primary_key": ("idVinculo",),
-        "unique_keys": (("idVinculo",),),
+        "unique_keys": (("idVinculo",), ("mat_estudante", "idCurso")),
         "references": (
             {
                 "fields": ("mat_estudante",),
@@ -218,6 +218,15 @@ COLLECTION_SPECS: dict[str, dict[str, Any]] = {
         ),
         "indexes": [
             _index("pk_vinculo", "idVinculo"),
+            _index(
+                "uq_vinculo_estudante_curso",
+                "mat_estudante",
+                "idCurso",
+                partial={
+                    "mat_estudante": {"$type": "string"},
+                    "idCurso": {"$type": "int"},
+                },
+            ),
             _index("ix_vinculo_estudante", "mat_estudante", unique=False),
             _index("ix_vinculo_curso", "idCurso", unique=False),
         ],

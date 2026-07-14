@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if editing else 'Novo' }} vínculo — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Vínculo</p><h1>{{ 'Editar vínculo' if editing else 'Cadastrar vínculo' }}</h1></div><a class="button secondary" href="{{ url_for('links_list') }}">Voltar</a></header>
+{% if not estudantes or not cursos %}<section class="notice warning">É necessário ter ao menos um estudante e um curso.</section>{% endif %}
+<form method="post" class="card form-grid">
+    <div class="field"><label for="mat_estudante">Estudante</label><select id="mat_estudante" name="mat_estudante" required><option value="">Selecione</option>{% for estudante in estudantes %}<option value="{{ estudante.mat_estudante }}" {% if vinculo and vinculo.mat_estudante == estudante.mat_estudante %}selected{% endif %}>{{ estudante.usuario_nome }} — {{ estudante.mat_estudante }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="idCurso">Curso</label><select id="idCurso" name="idCurso" required><option value="">Selecione</option>{% for curso in cursos %}<option value="{{ curso.idCurso }}" {% if vinculo and vinculo.idCurso == curso.idCurso %}selected{% endif %}>{{ curso.nome }} — {{ curso.turno }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="data_entrada">Data de entrada</label><input type="date" id="data_entrada" name="data_entrada" value="{{ vinculo.data_entrada|date_input if vinculo else '' }}"></div>
+    <div class="field"><label for="status">Status</label><select id="status" name="status" required>{% for item in status_vinculo %}<option value="{{ item }}" {% if (vinculo and vinculo.status == item) or (not vinculo and item == 'Ativo') %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="data_saida">Data de saída</label><input type="date" id="data_saida" name="data_saida" value="{{ vinculo.data_saida|date_input if vinculo else '' }}"></div>
+    <div class="form-actions span-2"><button class="button primary" {% if not estudantes or not cursos %}disabled{% endif %}>Salvar vínculo</button></div>
+</form>
+{% endblock %}

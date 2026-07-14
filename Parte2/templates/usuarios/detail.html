@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ usuario.nome }} — Portal NoSQL{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Ficha de usuário</p><h1>{{ usuario.nome }}</h1></div><div class="header-actions"><a class="button secondary" href="{{ url_for('users_list') }}">Voltar</a><a class="button primary" href="{{ url_for('users_edit', cpf=usuario.cpf) }}">Editar</a></div></header>
+<section class="detail-grid">
+<article class="card"><h2>Identificação</h2><dl><dt>CPF</dt><dd>{{ usuario.cpf }}</dd><dt>Nascimento</dt><dd>{{ usuario.data_nascimento|date_br }}</dd><dt>Login</dt><dd>{{ usuario.login or '—' }}</dd><dt>Senha</dt><dd><span class="protected">Não exibida</span></dd></dl></article>
+<article class="card"><h2>Contato</h2><dl><dt>E-mails</dt><dd>{{ usuario.email|join(', ') if usuario.email else '—' }}</dd><dt>Telefones</dt><dd>{{ usuario.telefone|join(', ') if usuario.telefone else '—' }}</dd><dt>Estudante associado</dt><dd>{% if estudante %}<a href="{{ url_for('students_detail', matricula=estudante.mat_estudante) }}">{{ estudante.mat_estudante }}</a>{% else %}Nenhum{% endif %}</dd></dl></article>
+</section>
+{% endblock %}
