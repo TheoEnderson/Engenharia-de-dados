@@ -1,5 +1,3 @@
-"""Configuração segura do projeto, sem conexão ou efeitos colaterais."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass

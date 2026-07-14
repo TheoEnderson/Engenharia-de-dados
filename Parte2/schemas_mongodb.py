@@ -1,10 +1,3 @@
-"""Catálogo offline das 16 coleções MongoDB da universidade.
-
-Os validators reproduzem tipos, NOT NULL, limites, enums e CHECKs que podem ser
-expressos localmente. As referências são metadados para validação no ETL e na
-futura aplicação: MongoDB não as aplica como foreign keys automaticamente.
-"""
-
 from __future__ import annotations
 
 from typing import Any

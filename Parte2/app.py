@@ -1,9 +1,10 @@
-"""Aplicação Flask independente para o CRUD MongoDB da Parte 2."""
-
 from __future__ import annotations
 
+import atexit
+from contextlib import contextmanager
 from datetime import datetime
 from decimal import Decimal
+from functools import partial
 import secrets
 from typing import Any
 
@@ -20,7 +21,7 @@ from flask import (
 )
 
 from config import ConfigurationError, get_settings
-from db import create_mock_database
+from db import create_mock_database, create_mongo_client
 from repositories import RepositoryBundle, create_repository_bundle
 from services import (
     DomainError,
@@ -31,6 +32,19 @@ from services import (
     UniversityService,
     ValidationError,
 )
+
+
+@contextmanager
+def _atlas_transaction(client: Any):
+    """Transação real via sessão do MongoDB (exige Atlas, que roda como replica set).
+
+    session.start_transaction() já faz commit automático ao sair normalmente
+    e aborta (rollback) automaticamente se uma exceção for propagada — mesmo
+    comportamento que o snapshot manual do modo mock, só que de verdade.
+    """
+    with client.start_session() as session:
+        with session.start_transaction():
+            yield session
 
 
 def _service() -> UniversityService:
@@ -107,27 +121,44 @@ def create_app(
 
     mode = str(app.config.get("MONGODB_MODE", "disabled")).lower()
     mock_client = None
+    mongo_client = None
     if repositories is None:
-        if mode != "mock":
-            raise ConfigurationError(
-                "A aplicação CRUD desta etapa só inicia com MONGODB_MODE=mock. "
-                "Nenhuma conexão Atlas é feita automaticamente."
+        if mode == "mock":
+            if database is None:
+                mock_client, database = create_mock_database(app.config["MONGODB_DATABASE"])
+            repositories = create_repository_bundle(database, mode="mock")
+        elif mode == "atlas":
+            if database is None:
+                mongo_client, database = create_mongo_client()
+            repositories = create_repository_bundle(
+                database,
+                mode="atlas",
+                transaction_factory=partial(_atlas_transaction, mongo_client),
             )
-        if database is None:
-            mock_client, database = create_mock_database(app.config["MONGODB_DATABASE"])
-        repositories = create_repository_bundle(database, mode="mock")
+        else:
+            raise ConfigurationError(
+                "MONGODB_MODE deve ser 'mock' ou 'atlas' para iniciar a aplicação."
+            )
 
     service = UniversityService(repositories)
     app.extensions["repositories"] = repositories
     app.extensions["university_service"] = service
     app.extensions["mock_client"] = mock_client
+    app.extensions["mongo_client"] = mongo_client
     app.config["MONGODB_MODE"] = mode
+
+    if mongo_client is not None:
+        atexit.register(mongo_client.close)
 
     if mode == "mock":
         print("[MODO MOCK] Banco MongoDB em memória; nenhuma conexão de rede será aberta.")
-    if app.config.get("DEMO_SEED"):
+    elif mode == "atlas":
+        print(f"[MODO ATLAS] Conectado ao banco '{app.config['MONGODB_DATABASE']}' no MongoDB Atlas.")
+    if app.config.get("DEMO_SEED") and mode == "mock":
         service.seed_demo()
         print("[MODO DEMONSTRAÇÃO] Dados temporários inseridos explicitamente no mock.")
+    elif app.config.get("DEMO_SEED"):
+        print("[AVISO] DEMO_SEED ignorado: só é aplicado em MONGODB_MODE=mock, nunca no Atlas real.")
 
     @app.context_processor
     def inject_globals() -> dict[str, Any]:
@@ -166,7 +197,12 @@ def create_app(
     # Usuários
     @app.get("/usuarios")
     def users_list():
-        return render_template("usuarios/list.html", usuarios=_service().list_users())
+        query = request.args.get("q", "").strip()
+        return render_template(
+            "usuarios/list.html",
+            usuarios=_service().list_users(query or None),
+            q=query,
+        )
 
     @app.route("/usuarios/novo", methods=["GET", "POST"])
     def users_create():
@@ -214,7 +250,12 @@ def create_app(
     # Estudantes
     @app.get("/estudantes")
     def students_list():
-        return render_template("estudantes/list.html", estudantes=_service().list_students())
+        query = request.args.get("q", "").strip()
+        return render_template(
+            "estudantes/list.html",
+            estudantes=_service().list_students(query or None),
+            q=query,
+        )
 
     @app.route("/estudantes/novo", methods=["GET", "POST"])
     def students_create():
@@ -271,7 +312,12 @@ def create_app(
     # Cursos
     @app.get("/cursos")
     def courses_list():
-        return render_template("cursos/list.html", cursos=_service().list_courses())
+        query = request.args.get("q", "").strip()
+        return render_template(
+            "cursos/list.html",
+            cursos=_service().list_courses(query or None),
+            q=query,
+        )
 
     @app.route("/cursos/novo", methods=["GET", "POST"])
     def courses_create():
@@ -318,7 +364,12 @@ def create_app(
     # Vínculos
     @app.get("/vinculos")
     def links_list():
-        return render_template("vinculos/list.html", vinculos=_service().list_links())
+        query = request.args.get("q", "").strip()
+        return render_template(
+            "vinculos/list.html",
+            vinculos=_service().list_links(query or None),
+            q=query,
+        )
 
     @app.route("/vinculos/novo", methods=["GET", "POST"])
     def links_create():

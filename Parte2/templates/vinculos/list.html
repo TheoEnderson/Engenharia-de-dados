@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Vínculos — Portal NoSQL{% endblock %}
 {% block content %}
+
 <header class="page-header"><div><p class="eyebrow">Coleção canônica</p><h1>Vínculos</h1></div><a class="button primary" href="{{ url_for('links_create') }}">Novo vínculo</a></header>
+<form method="get" style="margin-bottom: 1rem;">
+  <input
+    type="text"
+    name="q"
+    value="{{ q or '' }}"
+    placeholder="Buscar..."
+    style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; width: 260px;"
+  >
+  <button type="submit">Buscar</button>
+  {% if q %}
+    <a href="{{ request.path }}">Limpar</a>
+  {% endif %}
+</form>
 <section class="card table-wrap">{% if vinculos %}<table><thead><tr><th>Estudante</th><th>Matrícula</th><th>Curso</th><th>Status</th><th class="actions">Ações</th></tr></thead><tbody>{% for vinculo in vinculos %}<tr><td>{{ vinculo.estudante_nome }}</td><td>{{ vinculo.mat_estudante }}</td><td>{{ vinculo.curso_nome }}</td><td><span class="status">{{ vinculo.status }}</span></td><td class="actions"><a class="button small" href="{{ url_for('links_detail', link_id=vinculo.idVinculo) }}">Ficha</a><a class="button small secondary" href="{{ url_for('links_edit', link_id=vinculo.idVinculo) }}">Editar</a><form method="post" action="{{ url_for('links_delete', link_id=vinculo.idVinculo) }}" onsubmit="return confirm('Excluir somente este vínculo?')"><button class="button small danger">Excluir</button></form></td></tr>{% endfor %}</tbody></table>{% else %}<p class="empty">Nenhum vínculo cadastrado.</p>{% endif %}</section>
 {% endblock %}

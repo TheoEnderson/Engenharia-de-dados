@@ -1,9 +1,3 @@
-"""ETL offline do dump relacional para documentos MongoDB independentes.
-
-O comportamento padrão é dry-run. Nenhuma conexão é criada durante importação,
-parsing, validação ou dry-run. Escritas exigem a flag explícita ``--apply``.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -566,7 +560,6 @@ def process_sql(content: str) -> ETLResult:
             seen: dict[tuple[Any, ...], int] = {}
             for index, document in enumerate(table_documents):
                 key = tuple(document.get(field) for field in unique_fields)
-                # UNIQUE SQL aceita múltiplos NULL; PKs serão checadas pelo validator.
                 if any(value is None for value in key):
                     continue
                 if key in seen:

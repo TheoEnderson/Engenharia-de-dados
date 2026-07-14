@@ -1,13 +1,8 @@
-"""Planeja ou aplica validators e índices das 16 coleções.
-
-O padrão é dry-run. Não há remoção de duplicatas, seeds ou alteração de dados.
-Importar este módulo não cria conexão nem executa comandos.
-"""
-
 from __future__ import annotations
 
 import argparse
 from typing import Any, Iterable
+from pymongo.errors import OperationFailure
 
 from schemas_mongodb import COLLECTION_NAMES, COLLECTION_SPECS
 
@@ -29,8 +24,14 @@ def _create_index(collection: Any, definition: dict[str, Any]) -> str:
         for key, value in definition.items()
         if key not in {"keys"}
     }
-    return collection.create_index(definition["keys"], **options)
-
+    try:
+        return collection.create_index(definition["keys"], **options)
+    except OperationFailure as exc:
+        if exc.code == 85:
+            print(f"    [!] Corrigindo conflito de nome no índice {definition.get('name')}...")
+            collection.drop_index(definition["keys"])
+            return collection.create_index(definition["keys"], **options)
+        raise
 
 def apply_schema() -> None:
     """Aplica apenas collections, validators e índices; nunca altera documentos."""

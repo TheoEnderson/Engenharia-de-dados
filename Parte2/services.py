@@ -1,5 +1,3 @@
-"""Regras de negócio e validação dos CRUDs canônicos."""
-
 from __future__ import annotations
 
 from copy import deepcopy
@@ -177,6 +175,17 @@ def _without_password(document: dict[str, Any] | None) -> dict[str, Any] | None:
     return public
 
 
+def _matches(document: dict[str, Any], query: str, *fields: str) -> bool:
+    needle = query.strip().lower()
+    if not needle:
+        return True
+    for field in fields:
+        value = document.get(field)
+        if value is not None and needle in str(value).lower():
+            return True
+    return False
+
+
 class UniversityService:
     def __init__(self, repositories: RepositoryBundle):
         self.repositories = repositories
@@ -233,11 +242,14 @@ class UniversityService:
             raise DuplicateError("CPF ou login já cadastrado.") from exc
         return _without_password(created) or {}
 
-    def list_users(self) -> list[dict[str, Any]]:
-        return [
+    def list_users(self, query: str | None = None) -> list[dict[str, Any]]:
+        users = [
             _without_password(document) or {}
             for document in self.repositories.usuarios.list_all(sort=[("nome", 1)])
         ]
+        if query:
+            users = [u for u in users if _matches(u, query, "nome", "cpf", "login")]
+        return users
 
     def get_user(self, cpf: Any) -> dict[str, Any]:
         document = self.repositories.usuarios.get(_cpf(cpf))
@@ -314,11 +326,16 @@ class UniversityService:
         except DuplicateKeyError as exc:
             raise DuplicateError("Matrícula ou CPF já associado a outro estudante.") from exc
 
-    def list_students(self) -> list[dict[str, Any]]:
+    def list_students(self, query: str | None = None) -> list[dict[str, Any]]:
         students = self.repositories.estudantes.list_all(sort=[("mat_estudante", 1)])
         for student in students:
             user = self.repositories.usuarios.get(student["cpf"])
             student["usuario_nome"] = user["nome"] if user else "Usuário ausente"
+        if query:
+            students = [
+                s for s in students
+                if _matches(s, query, "mat_estudante", "cpf", "usuario_nome")
+            ]
         return students
 
     def get_student(self, matricula: Any) -> dict[str, Any]:
@@ -407,8 +424,14 @@ class UniversityService:
         except DuplicateKeyError as exc:
             raise DuplicateError("Curso duplicado.") from exc
 
-    def list_courses(self) -> list[dict[str, Any]]:
-        return self.repositories.cursos.list_all(sort=[("nome", 1), ("turno", 1)])
+    def list_courses(self, query: str | None = None) -> list[dict[str, Any]]:
+        courses = self.repositories.cursos.list_all(sort=[("nome", 1), ("turno", 1)])
+        if query:
+            courses = [
+                c for c in courses
+                if _matches(c, query, "nome", "campus", "turno", "nivel", "grau")
+            ]
+        return courses
 
     def get_course(self, course_id: Any) -> dict[str, Any]:
         normalized_id = _integer(course_id, "ID do curso", required=True, minimum=1)
@@ -508,7 +531,7 @@ class UniversityService:
         except DuplicateKeyError as exc:
             raise DuplicateError("Vínculo duplicado.") from exc
 
-    def list_links(self) -> list[dict[str, Any]]:
+    def list_links(self, query: str | None = None) -> list[dict[str, Any]]:
         links = self.repositories.vinculos.list_all(sort=[("idVinculo", 1)])
         for link in links:
             student = self.repositories.estudantes.get(link["mat_estudante"])
@@ -516,6 +539,11 @@ class UniversityService:
             user = self.repositories.usuarios.get(student["cpf"]) if student else None
             link["estudante_nome"] = user["nome"] if user else "Estudante ausente"
             link["curso_nome"] = course["nome"] if course else "Curso ausente"
+        if query:
+            links = [
+                l for l in links
+                if _matches(l, query, "mat_estudante", "estudante_nome", "curso_nome", "status")
+            ]
         return links
 
     def get_link(self, link_id: Any) -> dict[str, Any]:

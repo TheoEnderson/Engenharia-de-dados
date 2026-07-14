@@ -18,7 +18,11 @@
             <a href="{{ url_for('courses_list') }}">Cursos</a>
             <a class="nav-accent" href="{{ url_for('admission_create') }}">Nova admissão</a>
         </nav>
-        <p class="sidebar-note">Dados temporários em memória. Reiniciar a aplicação apaga o conteúdo.</p>
+        {% if mongodb_mode == "mock" %}
+  <p class="sidebar-note">Dados temporários em memória. Reiniciar a aplicação apaga o conteúdo.</p>
+{% else %}
+  <p class="sidebar-note">Conectado ao MongoDB Atlas — alterações são permanentes no banco.</p>
+{% endif %}
     </aside>
     <main class="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}

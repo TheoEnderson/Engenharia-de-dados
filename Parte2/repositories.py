@@ -1,5 +1,3 @@
-"""Repositórios MongoDB injetáveis para as quatro coleções do CRUD."""
-
 from __future__ import annotations
 
 from contextlib import contextmanager

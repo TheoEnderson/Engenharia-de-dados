@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Cursos — Portal NoSQL{% endblock %}
 {% block content %}
+
 <header class="page-header"><div><p class="eyebrow">Coleção canônica</p><h1>Cursos</h1></div><a class="button primary" href="{{ url_for('courses_create') }}">Novo curso</a></header>
+<form method="get" style="margin-bottom: 1rem;">
+  <input
+    type="text"
+    name="q"
+    value="{{ q or '' }}"
+    placeholder="Buscar..."
+    style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; width: 260px;"
+  >
+  <button type="submit">Buscar</button>
+  {% if q %}
+    <a href="{{ request.path }}">Limpar</a>
+  {% endif %}
+</form>
 <section class="card table-wrap">{% if cursos %}<table><thead><tr><th>Nome</th><th>Grau</th><th>Turno</th><th>Campus</th><th class="actions">Ações</th></tr></thead><tbody>{% for curso in cursos %}<tr><td>{{ curso.nome }}</td><td>{{ curso.grau or '—' }}</td><td>{{ curso.turno }}</td><td>{{ curso.campus or '—' }}</td><td class="actions"><a class="button small" href="{{ url_for('courses_detail', course_id=curso.idCurso) }}">Ficha</a><a class="button small secondary" href="{{ url_for('courses_edit', course_id=curso.idCurso) }}">Editar</a><form method="post" action="{{ url_for('courses_delete', course_id=curso.idCurso) }}" onsubmit="return confirm('Excluir este curso?')"><button class="button small danger">Excluir</button></form></td></tr>{% endfor %}</tbody></table>{% else %}<p class="empty">Nenhum curso cadastrado.</p>{% endif %}</section>
 {% endblock %}

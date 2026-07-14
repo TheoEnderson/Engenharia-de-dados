@@ -1,9 +1,3 @@
-"""Criação tardia do cliente MongoDB.
-
-Importar este módulo nunca abre uma conexão. A dependência pymongo também só é
-carregada quando uma operação remota foi explicitamente autorizada.
-"""
-
 from __future__ import annotations
 
 from typing import Any
