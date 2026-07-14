@@ -1,93 +1,217 @@
-# Parte 2 — MongoDB e CRUD local
+# Parte 2 — CRUD NoSQL com MongoDB
 
-Esta pasta contém o mapeamento das 16 tabelas do schema `universidade` e uma
-aplicação Flask independente para o CRUD de `usuario`, `estudante`, `vinculo` e
-`curso`. Nesta etapa, a aplicação funciona exclusivamente com `mongomock`, em
-memória, sem acessar o Atlas.
+Projeto da Parte 2 do Trabalho Prático de Engenharia de Dados. O objetivo é
+mapear para MongoDB todas as tabelas do modelo relacional da universidade,
+representar suas restrições e disponibilizar um CRUD real das estruturas
+`usuario`, `estudante`, `vinculo` e `curso`.
 
-## Segurança
+A aplicação Flask foi validada com MongoDB Atlas hospedado na AWS. As 16
+coleções, validators, índices, carga ETL, operações CRUD e transações foram
+confirmadas no banco real.
 
-- Credenciais não ficam no código.
-- `.env` é ignorado pelo Git e não é necessário para dry-run.
-- Sem `MONGODB_MODE=mock`, a aplicação web não inicia e nunca tenta Atlas.
-- `ETL.py` e `setup_banco.py` não conectam ao MongoDB quando importados.
-- Os dois scripts usam dry-run por padrão.
-- Operações remotas exigem `--apply` e as variáveis `MONGODB_URI` e
-  `MONGODB_DATABASE`.
-- O setup não remove duplicatas e não insere exemplos.
-- O ETL nunca exclui documentos; no modo apply futuro, usa upsert por chave
-  primária.
+## Tecnologias
 
-O arquivo `.env.example` contém somente os nomes das variáveis. Não coloque
-credenciais reais no repositório.
+- Python 3;
+- Flask;
+- MongoDB Atlas hospedado na AWS;
+- PyMongo para acesso ao MongoDB real;
+- mongomock para testes e execução local em memória;
+- unittest;
+- HTML e CSS.
 
-## Aplicação CRUD local
+## Arquitetura
 
-Instale as dependências no ambiente virtual e inicie explicitamente em mock:
+```text
+Interface Flask → serviços → repositórios → MongoDB
+```
+
+- `app.py`: aplicação Flask, rotas, formulários e seleção entre mock e Atlas;
+- `config.py`: leitura segura das variáveis de ambiente;
+- `db.py`: criação dos clientes mongomock e PyMongo;
+- `repositories.py`: operações de persistência e fronteira transacional;
+- `services.py`: validações, CRUD e regras de integridade;
+- `schemas_mongodb.py`: catálogo das 16 coleções, validators e índices;
+- `setup_banco.py`: criação ou atualização de coleções, validators e índices;
+- `ETL.py`: leitura, validação e carga do dump SQL;
+- `templates/` e `static/`: interface web;
+- `tests/`: testes automatizados;
+- `RELATORIO_PARTE2.md`: relatório técnico final.
+
+## Modelagem MongoDB
+
+Cada tabela relacional foi representada por uma coleção própria:
+
+| Tabela relacional | Coleção MongoDB | Chave principal |
+|---|---|---|
+| usuario | usuario | `cpf` |
+| professor | professor | `mat_professor` |
+| departamento | departamento | `cod_depto` |
+| curso | curso | `idCurso` |
+| estudante | estudante | `mat_estudante` |
+| vinculo | vinculo | `idVinculo` |
+| projeto | projeto | `id_projeto` |
+| plano | plano | (`mat_estudante`, `ano`) |
+| disciplina | disciplina | `cod_disc` |
+| semestre | semestre | (`ano`, `semestre`) |
+| sala | sala | `id_sala` |
+| horario | horario | `id_horario` |
+| turma | turma | `id_turma` |
+| leciona | leciona | (`id_turma`, `mat_professor`) |
+| alocacao | alocacao | (`id_turma`, `id_horario`) |
+| cursa | cursa | (`mat_estudante`, `id_turma`) |
+
+Os campos multivalorados `email` e `telefone` são arrays no documento
+`usuario`. Os relacionamentos são representados por CPF, matrícula, códigos e
+identificadores. As quatro coleções do CRUD permanecem canônicas e separadas,
+evitando duplicação de dados embutidos.
+
+## CRUD obrigatório
+
+A aplicação implementa Create, Read, Update e Delete de:
+
+- `usuario`;
+- `estudante`;
+- `vinculo`;
+- `curso`.
+
+Também existe o fluxo `/admissoes/nova`, que cadastra usuário, estudante e
+vínculo em uma transação real no Atlas.
+
+As regras confirmadas incluem:
+
+- unicidade de CPF e login;
+- unicidade de matrícula;
+- unicidade do identificador e da combinação estudante/curso em vínculo;
+- unicidade do identificador e da combinação acadêmica de curso;
+- existência de usuário antes do cadastro de estudante;
+- existência de estudante e curso antes do cadastro de vínculo;
+- bloqueio da exclusão de estudante ou curso referenciado;
+- exclusão individual de vínculo sem remover estudante ou curso;
+- rollback da admissão conjunta sem documentos parciais;
+- remoção da senha dos retornos públicos e do HTML.
+
+Validators controlam tipos BSON, tamanhos, campos obrigatórios e domínios. Os
+índices únicos garantem as principais restrições de chave no banco real. Como o
+MongoDB não oferece foreign keys entre coleções, a integridade referencial é
+verificada pelo ETL e pela camada de serviços.
+
+## Preparação do ambiente
 
 ```bash
 python3 -m venv .venv
-./.venv/bin/python -m pip install -r requirements.txt
-MONGODB_MODE=mock ./.venv/bin/flask --app app run --debug
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
 ```
 
-O terminal mostrará `[MODO MOCK]`. O banco é temporário e volta vazio a cada
-reinício. Um conjunto mínimo de demonstração só é criado quando a flag também é
-explícita:
+No Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+## Configuração do `.env`
+
+Crie `.env` localmente com valores próprios:
+
+```dotenv
+MONGODB_MODE=atlas
+MONGODB_URI=<URI_DO_MONGODB_ATLAS>
+MONGODB_DATABASE=<NOME_DO_DATABASE>
+DEMO_SEED=0
+FLASK_SECRET_KEY=<CHAVE_LOCAL>
+```
+
+O arquivo `.env` está ignorado pelo Git e não deve ser versionado, compartilhado
+ou incluído em capturas. Nunca registre URI, usuário, senha ou chave secreta no
+código-fonte.
+
+## Execução da aplicação
+
+### Modo mock
+
+Executa completamente em memória e não abre conexão de rede:
 
 ```bash
-MONGODB_MODE=mock DEMO_SEED=1 ./.venv/bin/flask --app app run --debug
+MONGODB_MODE=mock python3 -m flask --app app run --debug
 ```
 
-Rotas principais:
+Seed opcional exclusivo do mock:
 
-- `/usuarios`, `/usuarios/novo` e fichas/edições por CPF;
-- `/estudantes`, `/estudantes/novo` e fichas/edições por matrícula;
-- `/vinculos`, `/vinculos/novo` e fichas/edições pelo ID interno;
-- `/cursos`, `/cursos/novo` e fichas/edições pelo ID interno;
-- `/admissoes/nova`, fluxo atômico de usuário, estudante e vínculo inicial.
+```bash
+MONGODB_MODE=mock DEMO_SEED=1 python3 -m flask --app app run --debug
+```
 
-As senhas permanecem no campo definido pelo schema/dump para preservar a
-decisão de modelagem atual, mas nunca são devolvidas pelos serviços nem exibidas
-em HTML. Alterar para hash exigirá uma decisão explícita sobre o limite SQL de
-32 caracteres e uma migração do schema.
+### Modo Atlas
 
-## Uso offline
+Usa PyMongo e as configurações locais do `.env`:
+
+```bash
+MONGODB_MODE=atlas python3 -m flask --app app run
+```
+
+Não existe fallback automático para Atlas. Credenciais e database são exigidos
+explicitamente no modo real.
+
+## Testes automatizados
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+Resultado final confirmado:
+
+```text
+Ran 32 tests
+
+OK
+```
+
+## Setup do MongoDB
+
+Dry-run offline:
 
 ```bash
 python3 setup_banco.py --dry-run
-python3 ETL.py --input universidade-dump-engdados.sql --dry-run
-./.venv/bin/python -m unittest discover -s tests -v
 ```
 
-As flags `--dry-run` são opcionais porque esse é o comportamento padrão.
-
-## Operações remotas futuras
-
-Somente depois de autorização, backup e revisão do dry-run:
+Aplicação real das 16 coleções, validators e índices:
 
 ```bash
-python3 setup_banco.py --apply
-python3 ETL.py --input universidade-dump-engdados.sql --apply
+MONGODB_MODE=atlas python3 setup_banco.py --apply
 ```
 
-Esses comandos não devem ser executados contra produção sem preflight de dados
-existentes. Índices únicos podem falhar se o banco remoto já tiver duplicatas;
-nenhum script as remove automaticamente.
+O setup não insere exemplos nem remove documentos ou duplicidades.
 
-## Estrutura
+## ETL do dump SQL
 
-- `config.py`: configuração local e variáveis de ambiente.
-- `db.py`: criação tardia do cliente MongoDB.
-- `schemas_mongodb.py`: validators, índices, chaves e referências.
-- `setup_banco.py`: planejamento/aplicação explícita de schema.
-- `ETL.py`: parser, validação referencial, relatório e upserts futuros.
-- `docs/mapeamento-nosql.md`: projeto lógico e restrições.
-- `repositories.py`: acesso MongoDB injetável e rollback mock.
-- `services.py`: validações e integridade dos quatro CRUDs.
-- `app.py`, `templates/` e `static/`: aplicação Flask responsiva.
-- `tests/`: testes exclusivamente offline.
+Dry-run com validação de campos, tipos, duplicidades e referências:
 
-Ainda faltam homologação contra um ambiente Atlas autorizado, transações reais,
-evidências da apresentação e decisões finais de segurança. Este projeto não
-representa a conclusão da Parte 2.
+```bash
+python3 ETL.py --input universidade-dump-engdados.sql --dry-run
+```
+
+Carga real no Atlas:
+
+```bash
+MONGODB_MODE=atlas python3 ETL.py --input universidade-dump-engdados.sql --apply
+```
+
+O ETL usa upsert pela chave principal e não exclui documentos. O resultado
+confirmado foi de 238 registros lidos e válidos, sem inválidos, duplicidades ou
+referências ausentes.
+
+## Resultado final
+
+- aplicação Flask conectada ao Atlas;
+- cluster MongoDB hospedado na AWS;
+- 16 coleções confirmadas;
+- validators e índices aplicados;
+- ETL com 238 registros válidos;
+- CRUD real das quatro estruturas aprovado;
+- duplicidades e exclusões referenciais bloqueadas;
+- exclusão individual de vínculo aprovada;
+- admissão conjunta e rollback real aprovados;
+- 32 testes automatizados aprovados;
+- registros descartáveis removidos, com `CLEANUP_REMAINING=0`.
