@@ -16,7 +16,6 @@ Este repositório consolida um projeto de **Engenharia de Dados de Ponta a Ponta
 
 ## 🏗️ Diagrama de Arquitetura
 
-```mermaid
 flowchart TD
     subgraph "Camada Operacional (OLTP)"
         PG[("PostgreSQL<br>Relacional / Normalizado")]
@@ -46,8 +45,7 @@ flowchart TD
     HopETL -->|Carga de Fatos| DW
 
     DW -->|Consumo Analítico| BI
----
-
+    
 ## 📂 Estrutura e Camadas do Projeto
 
 ### `01-relational-postgres/` (Camada Transacional OLTP RDBMS)
