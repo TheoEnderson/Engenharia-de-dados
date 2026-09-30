@@ -12,45 +12,7 @@ Este repositório documenta a migração de um banco de dados relacional (OLTP) 
 
 ## Diagrama de arquitetura
 
-```mermaid
-flowchart TD
-    subgraph "Camada Operacional (OLTP)"
-        PG[("PostgreSQL<br>Relacional / Normalizado")]
-        MDB[("MongoDB<br>NoSQL / Documentos")]
-        AppPG["Portal Acadêmico<br>(Flask)"]
-        AppMDB["Sistema de Admissões<br>(Flask)"]
-    end
-
-    subgraph "Camada de Ingestão e Processamento (ETL)"
-        PyETL["Python / Pandas<br>Scripts ETL"]
-        HopETL["Apache Hop<br>Pipelines .hpl"]
-    end
-
-    subgraph "Camada Analítica (OLAP)"
-        DW[("Data Warehouse<br>Star / Snowflake Schema")]
-        BI["Consultas OLAP &<br>Dashboards Analíticos"]
-    end
-
-    AppPG -->|Leitura / Escrita| PG
-    AppMDB -->|Leitura / Escrita| MDB
-
-    PG -->|Extração| PyETL
-    PG -->|Extração| HopETL
-    MDB -->|Extração| PyETL
-
-    PyETL -->|Carga Dimensional| DW
-    HopETL -->|Carga de Fatos| DW
-
-    DW -->|Consumo Analítico| BI
-    
-    classDef db fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef app fill:#bbf,stroke:#333,stroke-width:2px;
-    classDef etl fill:#bfb,stroke:#333,stroke-width:2px;
-    
-    class PG,MDB,DW db;
-    class AppPG,AppMDB,BI app;
-    class PyETL,HopETL etl;
-```
+![Diagrama de Arquitetura](docs/arquitetura.png)
 
 ## Estrutura do projeto e trade-offs
 
